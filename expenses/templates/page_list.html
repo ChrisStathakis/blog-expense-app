@@ -1,0 +1,127 @@
+{% extends "index.html" %}
+
+
+{% block container %}
+    <div class="row">
+        <h2 class="center">{{ page_title }}</h2>
+    </div>
+        <br>
+    <div class="row">
+        <label class="badge badge-pill badge-primary">Total Value {{ total_value }} {{ currency }}</label>
+        <label class="badge badge-pill badge-success">Paid Value {{ paid_value }} {{ currency }}</label>
+        <label class="badge badge-pill badge-warning">Remaining Value {{ diff }} {{ currency }}</label>
+    </div>
+
+    <div class="row">
+        <div class="col-8">
+            <h5>Data</h5>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Title</th>
+                        <th>Category</th>
+                        <th>Value</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in object_list %}
+                    <tr>
+                        <td>{{ order.date_expired|date }}</td>
+                        <td>{{ order.title }}</td>
+                        <td>{{ order.tag_category }}</td>
+                        <td>{{ order.tag_final_value }}</td>
+                        <td>{{ order.tag_is_paid }}</td>
+                    </tr>
+                    {% empty %}
+                        <tr></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="col-4">
+            <h4>Analysis</h4>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Category</th>
+                        <th>Total Value</th>
+                        <th>Remaining</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for category in category_analysis %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ category.category__title }}</td>
+                            <td>{{ category.total_value }} {{ currency }}</td>
+                            <td>{{ category.remaining }} {{ currency }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4">No data</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <h5>Filters</h5>
+            <form method="get">
+                <div class="form-group">
+                    <input class="form-control"
+                           name="search_name"
+                           {% if search_name %}
+                            value="{{ search_name }}" placeholder="{{ search_name }}"
+                           {% else %}
+                            placeholder="Search"
+                           {% endif %}
+                    >
+                </div>
+                {% if categories %}
+                    <h5>Select Category</h5>
+                    {% for category in categories %}
+                        <div class="form-check">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   name="cate_name"
+                                   value="{{ category.id }}"
+                                   id="cate_id_{{ category.id }}"
+                                   {% if category.id|stringformat:"s" in cate_name %} checked {% endif %}
+
+                            >
+                            <label class="form-check-label" for="cate_id_{{ category.id }}">{{ category }}</label>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                <br>
+                <h5>Select Status</h5>
+                <div class="form-check">
+                    <input class="form-check-input"
+                           type="checkbox"
+                           name="paid_name"
+                           value="paid"
+                           id="paid_"
+                            {% if 'paid' in paid_name %} checked {% endif %}
+                    >
+                    <label class="form-check-label" for="paid_">Paid</label>
+                </div>
+                <br>
+                <div class="form-check">
+                    <input class="form-check-input"
+                           type="checkbox"
+                           name="paid_name"
+                           value="not_paid"
+                           id="not_paid_"
+                            {% if 'not_paid' in paid_name %} checked {% endif %}
+                    >
+                    <label class="form-check-label" for="not_paid_">Not Paid</label>
+                </div>
+                <br> <br>
+                <button type="submit" class="btn btn-primary">Save</button>
+                <a href="{{ request.path }}" class="btn btn-warning">Reset Filters</a>
+            </form>
+        </div>
+    </div>
+{% endblock %}

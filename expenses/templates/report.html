@@ -1,0 +1,228 @@
+{% extends "index.html" %}
+
+
+{% block container %}
+    <div class="row">
+        <h2 class="center">Reports</h2>
+    </div>
+        <br>
+    <div class="row">
+        <label class="badge badge-pill badge-primary">Total Value {{ totals.0 }} {{ currency }}</label>
+        <label class="badge badge-pill badge-success">Paid Value {{ totals.1 }} {{ currency }}</label>
+        <label class="badge badge-pill badge-warning">Remaining Value {{ totals.2 }} {{ currency }}</label>
+    </div>
+    <div class="row">
+        <div class="col-8"><canvas id="myChart" width="400" height="150"></canvas></div>
+        <div class="col-4"><canvas id="myChart0" width="400" height="300"></canvas></div>
+    </div>
+    <br> <br>
+    <div class="row">
+        <div class="col-6">
+            <h5>Data</h5>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Title</th>
+                        <th>Category</th>
+                        <th>Value</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in queryset %}
+                    <tr>
+                        <td>{{ order.date_expired|date }}</td>
+                        <td>{{ order.title }}</td>
+                        <td>{{ order.tag_category }}</td>
+                        <td>{{ order.tag_final_value }}</td>
+                        <td class="warning">{{ order.tag_is_paid }}</td>
+                    </tr>
+                    {% empty %}
+                        <tr></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="col-6">
+             <h5>Filters</h5>
+            <form method="get">
+                <div class="input-group input-daterange">
+                    <input type="date" name="startDate" class="form-control" value="{{ startDate }}">
+                        <div class="input-group-addon">to</div>
+                    <input type="date" name="endDate" class="form-control" value="{{ endDate }}">
+                </div>
+                <br>
+                <button type="submit" class="btn btn-primary">Save</button>
+                <a href="{{ request.path }}" class="btn btn-warning">Reset Filters</a>
+            </form>
+            <h4>Analysis</h4>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Type</th>
+                        <th>Total Value</th>
+                        <th>Remaining</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>Bills</td>
+                        <td>{{ bill_total_value }} {{ currency }}</td>
+                        <td>{{ bill_diff }} {{ currency }}</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Payroll</td>
+                        <td>{{ payroll_total_value }} {{ currency }}</td>
+                        <td>{{ payroll_diff }} {{ currency }}</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>Expenses</td>
+                        <td>{{ expense_total_value }} {{ currency }}</td>
+                        <td>{{ payroll_diff }} {{ currency }}</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>Total</td>
+                        <td>{{ totals.0 }} {{ currency }}</td>
+                        <td>{{ totals.2 }} {{ currency }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+
+    <script>
+        var ctx = document.getElementById("myChart0").getContext('2d');
+        var myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ["Bills", "Payroll", "Expenses", "Total", "Remaining"],
+                datasets: [{
+                    label: '# of Votes',
+                    fill: false,
+                    data: [{{ bill_total_value }}, {{ payroll_total_value }},
+                        {{ expense_paid_value }}, {{ totals.0 }}, {{ totals.2 }}
+                    ],
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(75, 192, 192, 0.2)',
+                        'green',
+                        'red'
+                    ],
+
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero:true
+                        }
+                    }]
+                }
+            }
+        });
+    </script>
+
+    <script>
+        var ctx = document.getElementById("myChart").getContext('2d');
+        var myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [
+                    {% for month in months_list %}
+                        {% if forloop.last %}
+                        "{{ month }}"
+                        {% else %}
+                        "{{ month }}",
+                        {% endif %}
+                    {% endfor %}
+                ],
+                datasets: [{
+                    label: 'Bills',
+                    fill:false,
+                    borderColor: 'blue',
+                    data: [{% for month in bill_by_month %}
+                        {% if forloop.last %}
+                            "{{ month.0 }}"
+                        {% else %}
+                            "{{ month.0 }}",
+                        {% endif %}
+                    {% endfor %}],
+
+                    borderWidth: 1
+                },
+                    {
+                        label: 'Payroll',
+                        fill: false,
+                        borderColor: 'green',
+                        data: [
+                            {% for month in payroll_by_month %}
+                                {% if forloop.last %}
+                                    "{{ month.0 }}"
+                                {% else %}
+                                    "{{ month.1 }}",
+                                {% endif %}
+                            {% endfor %}
+                        ]
+                    },
+                    {
+                        label: 'Expenses',
+                        fill: false,
+                        borderColor: 'blue',
+                        data: [
+                            {% for month in expenses_by_month %}
+                                {% if forloop.last %}
+                                    "{{ month.0 }}"
+                                {% else %}
+                                    "{{ month.1 }}",
+                                {% endif %}
+                            {% endfor %}
+                        ]
+                    },
+                    {
+                        label: 'Total',
+                        fill: false,
+                        borderColor: 'red',
+                        data: [
+                            {% for month in totals_by_month %}
+                                {% if forloop.last %}
+                                    "{{ month.0 }}"
+                                {% else %}
+                                    "{{ month.1 }}",
+                                {% endif %}
+                            {% endfor %}
+                        ]
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                title: {
+                    display: true,
+                    text: "Analysis per month"
+                },
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero:true
+                        }
+                    }]
+                }
+            }
+        });
+    </script>
+
+
+{% endblock %}

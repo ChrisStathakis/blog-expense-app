@@ -117,7 +117,7 @@ def report_view(request):
     payroll_total_value, payroll_paid_value, payroll_diff, bill_category_analysis = DefaultExpenseModel.analysis(payrolls)
     expense_total_value, expense_paid_value, expense_diff, expense_category_analysis = DefaultExpenseModel.analysis(expenses)
 
-    bill_by_month, payroll_by_month, expenses_by_month, totals_by_month = [], [], [] ,[]
+    bill_by_month, payroll_by_month, expenses_by_month, totals_by_month = [], [], [],[]
     months_list = []
     while date_start < date_end:
         months_list.append(date_start)
@@ -126,7 +126,9 @@ def report_view(request):
     for date in months_list:
         start = date.replace(day=1)
         next_month = date.replace(day=28) + datetime.timedelta(days=4)
-        end = next_month - datetime.timedelta(days=next_month.days)
+        days = int(str(next_month).split('-')[-1])
+        end = next_month - datetime.timedelta(days=days)
+        print(next_month, end)
         this_month_bill_queryset = bills.filter(date_expired__range=[start, end])
         this_month_bills = DefaultExpenseModel.analysis(this_month_bill_queryset)
         this_month_payroll_queryset = payrolls.filter(date_expired__range=[start, end])
